@@ -54,10 +54,19 @@ Bit* TicTacToe::PieceForPlayer(const int playerNumber)
 void TicTacToe::setUpBoard()
 {
     // here we should call setNumberOfPlayers to 2 and then set up the game options so the mouse knows to draw a 3x3 grid
+    setNumberOfPlayers(2);
     // _gameOptions has a rowX and rowY property we should set to 3
+     _gameOptions.rowX = 3;
+    _gameOptions.rowY = 3;
     // then we need to setup our 3x3 array in _grid with the correct position of the square, and load the "square.png" sprite for each square
     // we will use the initHolder function on each square to do this
+    for(int y = 0; y < 3; y++) {
+        for (int x = 0; x < 3; x++) {
+            _grid[y][x].initHolder(ImVec2(x, y), "square.png", x,y); 
+        }
+    }
     // finally we should call startGame to get everything going
+    startGame();
 }
 
 //
@@ -67,20 +76,24 @@ bool TicTacToe::actionForEmptyHolder(BitHolder *holder)
 {
     // 1) Guard clause: if holder is nullptr, fail fast.
     //    (Beginner hint: always check pointers before using them.)
-    //    if (!holder) return false;
+    if(!holder) return false;
 
     // 2) Is it actually empty?
     //    Ask the holder for its current Bit using the bit() function.
     //    If there is already a Bit in this holder, return false.
+    if(holder->bit()) return false;
 
     // 3) Place the current player's piece on this holder:
     //    - Figure out whose turn it is (getCurrentPlayer()->playerNumber()).
     //    - Create a Bit via PieceForPlayer(currentPlayerIndex).
     //    - Position it at the holder's position (holder->getPosition()).
     //    - Assign it to the holder: holder->setBit(newBit);
+    int currentPlayerIndex = getCurrentPlayer()->playerNumber();
+    Bit* newBit = PieceForPlayer(currentPlayerIndex);
+    newBit->setPosition(holder->getPosition().x, holder->getPosition().y);
 
     // 4) Return whether we actually placed a piece. true = acted, false = ignored.
-    return false; // replace with true if you complete a successful placement    
+    return true; // replace with true if you complete a successful placement    
 }
 
 bool TicTacToe::canBitMoveFrom(Bit *bit, BitHolder *src)
@@ -102,6 +115,11 @@ void TicTacToe::stopGame()
 {
     // clear out the board
     // loop through the 3x3 array and call destroyBit on each square
+    for(int y = 0; y < 3; y++) {
+        for (int x = 0; x < 3; x++) {
+            _grid[y][x].destroyBit();
+        }
+    }
 }
 
 //
@@ -110,11 +128,14 @@ void TicTacToe::stopGame()
 Player* TicTacToe::ownerAt(int index ) const
 {
     // index is 0..8, convert to x,y using:
-    // y = index / 3
-    // x = index % 3 
+    int y = index / 3;
+    int x = index % 3;
     // if there is no bit at that location (in _grid) return nullptr
+    Bit *bit = _grid[y][x].bit();
+    if (!bit) return nullptr;
+    
     // otherwise return the owner of the bit at that location using getOwner()
-    return nullptr;
+    return bit->getOwner();
 }
 
 Player* TicTacToe::checkForWinner()
