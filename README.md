@@ -8,3 +8,5 @@ Design Process
 - Used `PieceForPlayer()` to create X or O pieces depending on the current player.  
 - Implemented checks for winners (rows, columns, diagonals) and draws.  
 - Added `stateString()` / `setStateString()` to serialize and restore the board.
+
+The AI uses the Negamax algorithm with alpha-beta pruning to simulate all possible moves, score outcomes for both players, and pick the move that helps its chances of winning.
