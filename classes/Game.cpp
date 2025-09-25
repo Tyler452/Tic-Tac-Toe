@@ -49,7 +49,7 @@ void Game::setNumberOfPlayers(unsigned int n)
 	for (unsigned int i = 1; i <= n; i++)
 	{
 		Player *player = Player::initWithGame(this);
-//		player->setName( std::format( "Player-{}", i ) );
+		//player->setName( std::format( "Player-{}", i ) );
 		player->setName( "Player" );
 		player->setPlayerNumber(i-1);			// player numbers are zero-based
 		_players.push_back(player);
@@ -66,7 +66,7 @@ void Game::setAIPlayer(unsigned int playerNumber)
 {
 	_players.at(playerNumber)->setAIPlayer(true);
 	_gameOptions.AIPlayer = playerNumber;
-	_gameOptions.AIPlayer = true;
+	_gameOptions.AIPlaying = true;
 }
 
 void Game::startGame()
@@ -167,7 +167,7 @@ bool Game::animateAndPlaceBitFromTo(Bit *bit, BitHolder*src, BitHolder*dst)
 
 bool Game::gameHasAI()
 {
-    return false;
+	return _gameOptions.AIPlaying;
 }
 
 void Game::updateAI()

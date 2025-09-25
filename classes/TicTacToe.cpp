@@ -1,4 +1,5 @@
 #include "TicTacToe.h"
+#include <algorithm>
 
 // -----------------------------------------------------------------------------
 // TicTacToe.cpp
@@ -24,8 +25,8 @@
 // The rest of the routines are written as “comment-first” TODOs for you to complete.
 // -----------------------------------------------------------------------------
 
-const int AI_PLAYER   = 1;      // index of the AI player (O)
-const int HUMAN_PLAYER= 0;      // index of the human player (X)
+const int AI_PLAYER   = 1;      // AI as +1
+const int HUMAN_PLAYER= -1;     // human as -1
 
 TicTacToe::TicTacToe()
 {
@@ -66,6 +67,8 @@ void TicTacToe::setUpBoard()
         }
     }
     
+    // mark player 1 (index AI_PLAYER) as the AI so the engine will call updateAI()
+    setAIPlayer(AI_PLAYER);
     // finally we should call startGame to get everything going
     startGame();
 }
@@ -214,7 +217,8 @@ std::string TicTacToe::stateString() const
     // each character should be '0' for empty, '1' for player 1 (X), and '2' for player 2 (O)
     // the order should be left-to-right, top-to-bottom
     // for example, the starting state is "000000000"
-    std::string s = "000000000"; 
+    std::string s;
+    s.reserve(9);
     // if player 1 has placed an X in the top-left and player 2 an O in the center, the state would be "100020000"
     // you can build the string using a loop and the to_string function
     // for example, to convert an integer to a string, you can use std::to_string(1) which returns "1"
@@ -289,23 +293,22 @@ void TicTacToe::setStateString(const std::string &s)
 //
 void TicTacToe::updateAI() 
 {
-    // we will implement the AI in the next assignment!
     std::string state = stateString();
-    int bestMove = -10000;
+    int bestScore = -10000;
     int bestSquare = -1;
-    for(int i = 0; i < 9; i++) {
+    for (int i = 0; i < 9; ++i) {
         if (state[i] == '0') {
-            state[i] = '2'; // AI is player 2
-            int aiMove = negamax(state, 0, HUMAN_PLAYER);
+            state[i] = '2'; 
+            int score = -negamax(state, 0, HUMAN_PLAYER, -10000, 10000);
             state[i] = '0';
-            if(aiMove > bestMove) {
-                bestMove = aiMove;
+            if (score > bestScore) {
+                bestScore = score;
                 bestSquare = i;
             }
         }
     }
 
-    if(bestSquare != -1) {
+    if (bestSquare != -1) {
         int y = bestSquare / 3;
         int x = bestSquare % 3;
         actionForEmptyHolder(&_grid[y][x]);
@@ -326,29 +329,34 @@ int checkForAIWinner(const std::string &state) {
     for(int i = 0; i < 8; i++) {
         const int *combo = winningCombos[i];
         char player = state[combo[0]];
-        if(player && player == state[combo[1]] && player == state[combo[2]]) {
-            return 10; 
-        }
-        return 0; // no winner
+        if(player != '0'  && player == state[combo[1]] && player == state[combo[2]]) 
+            return (player == '2') ? 10 : -10;
     }
+    return 0;
 }
-
-int negamax(std::string &state, int depth, int player) {
+int TicTacToe::negamax(std::string &state, int depth, int player, int alpha, int beta) {
     int score = checkForAIWinner(state);
-    if(score){
-        return -score;
+    if (score != 0) {
+        int rel = (player == AI_PLAYER) ? score : -score;
+        return (rel > 0) ? rel - depth : rel + depth;
     }
-    if(isAIBoardFull(state)) {
-        return 0; 
+    if (isAIBoardFull(state)) {
+        return 0;
     }
+
     int bestScore = -10000;
-    for(int i = 0; i< 9; i++){
-        if(state[i] == '0') {
-            state[i] = player == HUMAN_PLAYER ? '1' : '2';
-            bestScore = std::max(bestScore, -negamax(state, depth + 1, 1 - player));
+    char mark = (player == HUMAN_PLAYER) ? '1' : '2';
+    for (int i = 0; i < 9; ++i) {
+        if (state[i] == '0') {
+            state[i] = mark;
+            int val = -negamax(state, depth + 1, -player, -beta, -alpha);
             state[i] = '0';
+            if (val > bestScore) bestScore = val;
+            alpha = std::max(alpha, val);
+            if (alpha >= beta) {
+                break;
+            }
         }
     }
     return bestScore;
 }
-
